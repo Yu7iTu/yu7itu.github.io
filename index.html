@@ -279,10 +279,8 @@
     gap: 2px;
     padding: 4px;
     font-size: 13px;
-    background: rgba(255, 255, 255, 0.5);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.9);
     border-radius: 999px;
     box-shadow: 0 8px 24px -12px rgba(30, 90, 150, 0.45);
   }
@@ -703,7 +701,8 @@
   function follow() {
     const pageW = document.documentElement.clientWidth;
     U.x = clamp(U.cx + window.scrollX - U.grabX, -100 * U.s, pageW - 60 * U.s);
-    U.y = U.cy + window.scrollY - U.grabY;
+    const pageBottom = document.querySelector('main').getBoundingClientRect().bottom + window.scrollY;
+    U.y = clamp(U.cy + window.scrollY - U.grabY, -10 * U.s, pageBottom - 195 * U.s);
   }
 
   umbrellaEl.addEventListener('pointerdown', e => {
@@ -781,9 +780,12 @@
   function setAmount(v, first) {
     const prev = amount;
     amount = v;
-    slider.value = String(v);
-    slider.setAttribute('aria-valuetext', describe(v));
-    slider.title = describe(v);
+    if (first) slider.value = String(v);
+    const label = describe(v);
+    if (slider.title !== label) {
+      slider.title = label;
+      slider.setAttribute('aria-valuetext', label);
+    }
     try { localStorage.setItem('rain-amount', String(v)); } catch (e) { /* storage unavailable */ }
     document.body.classList.toggle('is-clear', v === 0);
     setUmbrellaHidden(v === 0);

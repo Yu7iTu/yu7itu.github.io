@@ -766,13 +766,18 @@
       const f = 1 - dist / NUDGE_R;
       const ux = dist ? dx / dist : (Math.random() < 0.5 ? -1 : 1);
       L.busy = true;
+      // Pin the letter's current color for the length of the jiggle. Some browsers (Safari especially)
+      // repaint a moving letter on its own layer and can lose an inherited color there, so in night
+      // mode the letter would flash dark.
+      const color = getComputedStyle(L.el).color;
       const anim = L.el.animate([
-        { transform: 'translate(0, 0) rotate(0deg)' },
+        { transform: 'translate(0, 0) rotate(0deg)', color },
         {
           transform: `translate(${(ux * NUDGE_X * f).toFixed(2)}px, ${(-NUDGE_Y * f * rand(0.6, 1)).toFixed(2)}px) rotate(${(ux * NUDGE_ROT * f).toFixed(2)}deg)`,
+          color,
           offset: 0.25
         },
-        { transform: 'translate(0, 0) rotate(0deg)' }
+        { transform: 'translate(0, 0) rotate(0deg)', color }
       ], { duration: 700 + rand(0, 250), easing: 'cubic-bezier(.3,.7,.3,1)' });
       anim.onfinish = anim.oncancel = () => { L.busy = false; };
     }

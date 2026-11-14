@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yuqi Tu</title>
+<meta name="description" content="Yuqi Tu, PhD student in Computing &amp; Data Sciences at Boston University, working on reinforcement learning and NLP.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5c3.3 4.4 6.3 8 6.3 11.4a6.3 6.3 0 0 1-12.6 0C5.7 10.5 8.7 6.9 12 2.5z' fill='%2389cff0' stroke='%232f6fa8' stroke-width='1.3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Instrument+Sans:wght@400;500&family=Noto+Serif+SC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  /* Direction: rain on baby blue water. Left-aligned editorial column, one large italic name, hairline rules instead of cards. */
+  :root {
+    --sky-top: #cdeafb;
+    --sky-mid: #ade0f6;
+    --sky-low: #92cbef;
+    --ink: #163a5e;
+    --ink-soft: #4c7298;
+    --line: rgba(22, 58, 94, 0.2);
+    --accent: #2f6fa8;
+    --font-display: "Cormorant Garamond", "Noto Serif SC", Georgia, serif;
+    --font-body: "Instrument Sans", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  html { overflow-x: hidden; }
+  body {
+    min-height: 100%;
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    background: var(--sky-mid);
+  }
+
+  /* layers, back to front: sky, rain, sunlight, page, umbrella, rain control */
+  .sky {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(120vmax 90vmax at 50% -20%, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-low) 100%);
+  }
+  .sky-clear {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 2.4s ease;
+    background:
+      radial-gradient(60vmax 45vmax at 10% -10%, rgba(255, 243, 214, 0.55), transparent 65%),
+      radial-gradient(120vmax 90vmax at 50% -20%, #eef9ff 0%, #c8eafc 45%, #a8daf6 100%);
+  }
+  body.is-clear .sky-clear { opacity: 1; }
+
+  #rain {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: block;
+    pointer-events: none;
+  }
+
+  .sunlight { position: fixed; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+  .beam {
+    position: absolute;
+    top: -60vh;
+    left: 6vw;
+    width: 16vw;
+    min-width: 120px;
+    height: 230vh;
+    opacity: 0;
+    transform-origin: 50% 0;
+    background: linear-gradient(90deg,
+      rgba(255, 248, 225, 0) 0%,
+      rgba(255, 248, 225, 0.7) 42%,
+      rgba(255, 252, 240, 0.95) 50%,
+      rgba(255, 248, 225, 0.7) 58%,
+      rgba(255, 248, 225, 0) 100%);
+    filter: blur(14px);
+    mix-blend-mode: screen;
+  }
+  .beam.thin { left: 20vw; width: 5vw; min-width: 40px; }
+  .sun-glow {
+    position: absolute;
+    left: -22vmax;
+    top: -22vmax;
+    width: 60vmax;
+    height: 60vmax;
+    border-radius: 50%;
+    opacity: 0;
+    background: radial-gradient(circle, rgba(255, 246, 220, 0.9), rgba(255, 246, 220, 0) 65%);
+  }
+  body.sun-flash .beam { animation: beam 2.2s cubic-bezier(.3, .6, .3, 1) forwards; }
+  body.sun-flash .beam.thin { animation-delay: 0.15s; }
+  body.sun-flash .sun-glow { animation: sun-glow 2.2s ease forwards; }
+  @keyframes beam {
+    0%   { opacity: 0; transform: rotate(-28deg) translateX(-12vw); }
+    30%  { opacity: 1; }
+    100% { opacity: 0; transform: rotate(-28deg) translateX(18vw); }
+  }
+  @keyframes sun-glow {
+    0% { opacity: 0; }
+    25% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  main {
+    position: relative;
+    z-index: 3;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 72px 24px 48px;
+  }
+
+  .hero { padding: 7vh 0 56px; }
+  .affil {
+    margin: 0 0 20px;
+    font-size: 14px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(72px, 15vw, 168px);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    color: #12365a;
+    text-wrap: balance;
+  }
+
+  section {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 16px 40px;
+    padding: 36px 0;
+    border-top: 1px solid var(--line);
+  }
+  h2 {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .body p { margin: 0 0 14px; max-width: 62ch; }
+  .body p:last-child { margin-bottom: 0; }
+  .portrait { margin: 26px 0 0; width: min(100%, 280px); }
+  .portrait img, .portrait-empty {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 18px 40px -22px rgba(22, 58, 94, 0.55);
+  }
+  .portrait img { height: auto; object-position: 50% 30%; border: 1px solid rgba(255, 255, 255, 0.85); }
+  .portrait-empty {
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: rgba(255, 255, 255, 0.35);
+    border: 1px dashed rgba(22, 58, 94, 0.3);
+  }
+
+  .interests { list-style: none; margin: 0; padding: 0; display: grid; gap: 22px; }
+  .interests h3 {
+    margin: 0 0 2px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.2;
+  }
+  .interests p { margin: 0; color: var(--ink-soft); max-width: 56ch; }
+
+  .links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+  a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  a:hover { color: var(--accent); border-color: var(--accent); }
+  a:focus-visible, button:focus-visible, .umbrella:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+
+  footer {
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  /* text split into letters so raindrops can nudge them */
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    -webkit-user-select: none;
+    user-select: none; /* so copying text doesn't pick up this hidden copy twice */
+  }
+  .w { display: inline-block; white-space: nowrap; }
+  .ch { display: inline-block; }
+
+  /* the umbrella: a clear vinyl one, open beside the name; drag it anywhere */
+  .umbrella {
+    position: absolute;
+    z-index: 9;
+    left: 0;
+    top: 0;
+    width: 160px;
+    height: 200px;
+    transform-origin: 80px 165px;
+    pointer-events: none;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .umbrella { transition: opacity 0.6s ease; }
+  .umbrella.returning { transition: transform 0.7s cubic-bezier(.4, .1, .2, 1), opacity 0.6s ease; }
+  .umbrella.is-hidden { opacity: 0; }
+  .umbrella.is-hidden .u-hit, .umbrella.is-hidden .u-fabric { pointer-events: none; }
+  .umbrella svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    filter: drop-shadow(0 8px 10px rgba(30, 90, 150, 0.22));
+    transform-origin: 80px 188px;
+  }
+  .umbrella.hint svg { animation: hint 1.1s ease; }
+  @keyframes hint {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-7deg); }
+    55% { transform: rotate(5deg); }
+    80% { transform: rotate(-2deg); }
+  }
+  .u-hit { fill: none; stroke: transparent; stroke-width: 30; pointer-events: stroke; cursor: grab; }
+  .u-canopy {
+    transform-box: view-box;
+    transform-origin: 80px 8px;
+    transform: scale(0.1, 1.45);
+    transition: transform 0.5s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .is-open .u-canopy { transform: scale(1, 1); }
+  .u-fabric {
+    fill: rgba(170, 214, 244, 0.92);
+    stroke: rgba(255, 255, 255, 0.95);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    pointer-events: visiblePainted;
+    cursor: grab;
+    transition: fill 0.5s;
+  }
+  .is-open .u-fabric { fill: rgba(232, 246, 255, 0.5); }
+  .u-ribs { fill: none; stroke: rgba(47, 111, 168, 0.45); stroke-width: 1.2; }
+  .u-shaft { fill: none; stroke: #12365a; stroke-width: 3.2; stroke-linecap: round; }
+  .umbrella.dragging .u-hit, .umbrella.dragging .u-fabric { cursor: grabbing; }
+
+  /* rain intensity control */
+  .weather {
+    position: fixed;
+    z-index: 10;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.5);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    box-shadow: 0 8px 24px -12px rgba(30, 90, 150, 0.45);
+  }
+  .weather { gap: 10px; padding: 7px 14px; }
+  .weather svg { flex: none; color: var(--ink-soft); }
+  #rain-amount {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 150px;
+    height: 20px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  #rain-amount::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #fff1cf 0%, #c6e8fb 30%, var(--accent) 100%);
+  }
+  #rain-amount::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #fff1cf 0%, #c6e8fb 30%, var(--accent) 100%);
+  }
+  #rain-amount::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid var(--accent);
+    box-shadow: 0 2px 6px rgba(30, 90, 150, 0.35);
+  }
+  #rain-amount::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid var(--accent);
+    box-shadow: 0 2px 6px rgba(30, 90, 150, 0.35);
+  }
+  #rain-amount:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 999px; }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    main { padding-top: 64px; }
+    section { grid-template-columns: 1fr; gap: 12px; }
+    #rain-amount { width: 120px; }
+    .umbrella { width: 112px; height: 140px; transform-origin: 56px 115.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true"><div class="sky-clear"></div></div>
+<canvas id="rain" aria-hidden="true"></canvas>
+<div class="sunlight" aria-hidden="true">
+  <span class="sun-glow"></span>
+  <span class="beam"></span>
+  <span class="beam thin"></span>
+</div>
+
+<div class="weather" role="group" aria-label="Rain intensity">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+  <input type="range" id="rain-amount" min="0" max="100" step="1" value="40" aria-label="Rain intensity">
+  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.5 1.2 3.4 3.4 0 0 1 .1 6.8z"/><path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5"/></svg>
+</div>
+
+<div class="umbrella is-open" id="umbrella" tabindex="0" role="button" title="Drag me" aria-label="Umbrella. Drag it to keep the rain off another part of the page. Double-click or press Enter to put it back beside the name.">
+  <svg viewBox="0 0 160 200" aria-hidden="true">
+    <g class="u-canopy">
+      <path class="u-fabric" d="M8 62 C8 28 40 8 80 8 C120 8 152 28 152 62 Q134 52 116 62 Q98 52 80 62 Q62 52 44 62 Q26 52 8 62 Z"/>
+      <path class="u-ribs" d="M80 8 Q54 24 44 62 M80 8 Q106 24 116 62"/>
+    </g>
+    <path class="u-shaft" d="M80 2 L80 172 Q80 188 92 188 Q103 188 103 177"/>
+    <path class="u-hit" d="M80 4 L80 176 Q80 188 92 188 Q103 188 103 177"/>
+  </svg>
+</div>
+
+<main>
+  <!-- Text with class="nudge" is split into letters that move a little when a raindrop lands next to them. -->
+  <header class="hero">
+    <!-- EDIT: affiliation line -->
+    <p class="affil nudge">PhD student · Boston University</p>
+    <h1>Yuqi Tu</h1>
+  </header>
+
+  <section>
+    <h2 class="nudge">About</h2>
+    <div class="body">
+      <!-- EDIT: about text -->
+      <p class="nudge">I am a PhD student in the <a href="https://www.bu.edu/cds-faculty/">Faculty of Computing &amp; Data Sciences (CDS)</a> at Boston University, advised by Xuezhou Zhang. I work on reinforcement learning and natural language processing.</p>
+      <p class="nudge">I received my bachelor's degree in Mathematics (Honors) and Computer Sciences from UW–Madison, where I was mentored by Prof. <a href="https://people.math.wisc.edu/~valko/">Benedek Valko</a>, Prof. <a href="http://www.iliasdiakonikolas.org">Ilias Diakonikolas</a> and Prof. <a href="https://jcape1.github.io/">Joshua Cape</a>. Before Madison, I studied for two years at Shanghai University of Finance and Economics.</p>
+      <figure class="portrait">
+        <img src="images/portrait.jpg" alt="Yuqi Tu by the water on a sunny day" width="720" height="1080">
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="nudge">Research</h2>
+    <ul class="interests">
+      <li>
+        <h3 class="nudge">Reinforcement learning</h3>
+        <p class="nudge">Sequential decision-making, from bandit theory to deep RL.</p>
+      </li>
+      <li>
+        <h3 class="nudge">Representation learning</h3>
+        <p class="nudge">What a learned representation encodes, and how to measure it.</p>
+      </li>
+      <li>
+        <h3 class="nudge">Language models</h3>
+        <p class="nudge">Decision-making and reasoning in NLP systems.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="nudge">Elsewhere</h2>
+    <div class="body">
+      <!-- EDIT: add more links here (Google Scholar, CV, ...) -->
+      <ul class="links">
+        <li><a href="mailto:yuqitu@bu.edu">yuqitu@bu.edu</a></li>
+        <li><a href="https://github.com/Yu7iTu">GitHub</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>© 2026 Yuqi Tu</footer>
+</main>
+
+<script>
+(() => {
+  const canvas = document.getElementById('rain');
+  const ctx = canvas.getContext('2d');
+  const weather = document.querySelector('.weather');
+  const slider = document.getElementById('rain-amount');
+  const umbrellaEl = document.getElementById('umbrella');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+
+  // Rain intensity from the slider, 0 (sunny) to 100 (downpour).
+  // rate = drops per second per px of width; speed and len scale fall speed and streak length.
+  const MAX_RATE = 0.02;
+  function rainParams() {
+    const t = amount / 100;
+    return { rate: amount > 0 ? MAX_RATE * Math.pow(t, 1.3) : 0, speed: 0.8 + 0.5 * t, len: 0.85 + 0.5 * t };
+  }
+  const MAX_RIPPLES = 220;
+
+  // Drops land between HORIZON (far, small, faint) and the bottom of the screen (near, large, bright).
+  const HORIZON = 0.15;
+  const landingY = d => H * (HORIZON + (0.98 - HORIZON) * d);
+  const depthAt = y => Math.max(0, Math.min(1, (y / H - HORIZON) / (0.98 - HORIZON)));
+
+  // How much a letter moves when a drop lands next to it.
+  const NUDGE_R = 18;     // px: how close the drop has to land
+  const NUDGE_X = 3;      // px sideways
+  const NUDGE_Y = 3.5;    // px upward
+  const NUDGE_ROT = 6;    // degrees
+
+  let W = 0, H = 0, dpr = 1;
+  let drops = [], ripples = [], splats = [], letters = [];
+  let acc = 0, amount = 40;
+  try {
+    const saved = localStorage.getItem('rain-amount');
+    if (saved !== null && Number(saved) >= 0 && Number(saved) <= 100) amount = Number(saved);
+  } catch (e) { /* storage unavailable */ }
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  // Each drop gets its own shade somewhere between white and BLUE.
+  const BLUE = [46, 120, 189]; // deepest shade (edit to change the blue end)
+  function tint() {
+    const c = Math.random();
+    const mix = i => Math.round(255 + (BLUE[i] - 255) * c);
+    return { c, rgb: `${mix(0)},${mix(1)},${mix(2)}` };
+  }
+
+  // Umbrella state. x, y = top-left of its 160x200 box in page coordinates, so it scrolls with the name.
+  // s = its scale on small screens. home = sitting in its spot beside the name.
+  const HOME_TILT = -10; // in its spot it leans a little toward the name
+  const U = { x: 0, y: 0, s: 1, open: true, home: true, dragging: false, moved: false, tilt: HOME_TILT, vx: 0, grabX: 0, grabY: 0, startX: 0, startY: 0, cx: 0, cy: 0 };
+  const nameEl = document.querySelector('h1');
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    U.s = (umbrellaEl.offsetWidth || 160) / 160;
+    if (U.home) goHome();
+    else renderUmbrella();
+  }
+
+  /* ---------- rain ---------- */
+
+  // depth d: 0 is far (small, slow, faint), 1 is near (large, fast, bright)
+  function spawnDrop() {
+    const d = Math.random();
+    const L = rainParams();
+    drops.push({
+      x: rand(0, W), y: -40, d, g: 0,
+      vy: (260 + d * 520) * L.speed,
+      len: (12 + d * 26) * L.len,
+      ty: landingY(d),
+      tint: tint()
+    });
+  }
+  function spawnRipple(x, y, d, tn = tint()) {
+    if (ripples.length >= MAX_RIPPLES) ripples.shift();
+    ripples.push({ x, y, d, t: 0, dur: 1.6 + d * 1.6, max: 26 + d * 90, tint: tn });
+  }
+
+  // Canopy as the top half of an ellipse: returns where a drop hits it, or null.
+  function canopyHit(p) {
+    if (!U.open) return null;
+    const s = U.s, th = U.tilt * Math.PI / 180;
+    // the umbrella pivots at its hand-hold; find where the canopy's rim center ends up on screen
+    const px = U.x + 80 * s - window.scrollX, py = U.y + 165 * s - window.scrollY;
+    const cx = px + 103 * s * Math.sin(th), by = py - 103 * s * Math.cos(th), a = 74 * s, b = 56 * s;
+    if (p.y > by + 2 || p.y < by - b) return null;
+    const nx = (p.x - cx) / a, ny = (p.y - by) / b;
+    if (nx * nx + ny * ny > 1) return null;
+    return { cx, by, a, nx, ny };
+  }
+
+  function hitUmbrella(p, h) {
+    // a couple of tiny droplets bounce off the canopy
+    const len = Math.hypot(h.nx, h.ny) || 1;
+    for (let k = 0; k < 2; k++) {
+      splats.push({
+        x: p.x, y: p.y, t: 0, life: rand(0.25, 0.45), rgb: p.tint.rgb,
+        vx: (h.nx / len) * rand(40, 110) + rand(-20, 20),
+        vy: -rand(50, 130)
+      });
+    }
+    if (splats.length > 300) splats.splice(0, splats.length - 300);
+    // some of the water runs off the edge and drips down
+    if (Math.random() < 0.35) {
+      const side = p.x < h.cx ? -1 : 1;
+      drops.push({
+        x: h.cx + side * h.a * rand(0.9, 1), y: h.by + 2, d: p.d, g: 1300,
+        vy: rand(30, 90), len: 6 + p.d * 8,
+        ty: Math.max(p.ty, h.by + 16),
+        tint: p.tint
+      });
+    }
+  }
+
+  function step(dt) {
+    const rate = rainParams().rate;
+    if (rate > 0) {
+      acc += dt * rate * W;
+      while (acc >= 1) { acc -= 1; spawnDrop(); }
+    } else acc = 0;
+    for (let i = drops.length - 1; i >= 0; i--) {
+      const p = drops[i];
+      if (p.g) p.vy += p.g * dt;
+      p.y += p.vy * dt;
+      const h = canopyHit(p);
+      if (h && !p.g) { hitUmbrella(p, h); drops.splice(i, 1); continue; }
+      if (p.y >= p.ty) {
+        spawnRipple(p.x, p.ty, p.d, p.tint);
+        nudge(p.x, p.ty);
+        drops.splice(i, 1);
+      }
+    }
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      ripples[i].t += dt;
+      if (ripples[i].t >= ripples[i].dur) ripples.splice(i, 1);
+    }
+    for (let i = splats.length - 1; i >= 0; i--) {
+      const q = splats[i];
+      q.t += dt;
+      q.vy += 900 * dt;
+      q.x += q.vx * dt;
+      q.y += q.vy * dt;
+      if (q.t >= q.life) splats.splice(i, 1);
+    }
+  }
+
+  function ring(x, y, rad, alpha, width, tn) {
+    // pale rings get a faint blue shadow so they still read on light water
+    ctx.lineWidth = width;
+    ctx.strokeStyle = `rgba(32,104,168,${(alpha * 0.3 * (1 - tn.c)).toFixed(3)})`;
+    ctx.beginPath(); ctx.ellipse(x, y + 1.2, rad, rad * 0.32, 0, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = `rgba(${tn.rgb},${alpha.toFixed(3)})`;
+    ctx.beginPath(); ctx.ellipse(x, y, rad, rad * 0.32, 0, 0, TAU); ctx.stroke();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (const r of ripples) {
+      const k = r.t / r.dur;
+      const rad = r.max * (1 - Math.pow(1 - k, 2.4));
+      const alpha = (1 - k) * (0.4 + 0.45 * r.d);
+      const w = 1 + r.d * 0.8;
+      ring(r.x, r.y, rad, alpha, w, r.tint);
+      if (k > 0.12) ring(r.x, r.y, rad * 0.62, alpha * 0.55, w, r.tint);
+    }
+    ctx.lineCap = 'round';
+    for (const p of drops) {
+      const a = 0.45 + 0.5 * p.d;
+      const g = ctx.createLinearGradient(p.x, p.y - p.len, p.x, p.y);
+      g.addColorStop(0, `rgba(${p.tint.rgb},0)`);
+      g.addColorStop(1, `rgba(${p.tint.rgb},${a.toFixed(3)})`);
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 1 + p.d * 1.1;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - p.len);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(${p.tint.rgb},${Math.min(1, a + 0.15).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 0.9 + p.d * 1.1, 0, TAU);
+      ctx.fill();
+    }
+    for (const q of splats) {
+      ctx.fillStyle = `rgba(${q.rgb},${(0.9 * (1 - q.t / q.life)).toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(q.x, q.y, 1.3, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  /* ---------- letters nudged by nearby drops ---------- */
+
+  // Split the plain text of an element into letter spans; links inside it stay whole.
+  // Screen readers get the original text from a visually hidden copy.
+  function splitText(el) {
+    const first = el.firstChild, lastNode = el.lastChild;
+    [...el.childNodes].forEach(node => {
+      if (node.nodeType !== 3) return;
+      let text = node.textContent.replace(/\s+/g, ' ');
+      if (node === first) text = text.replace(/^ /, '');
+      if (node === lastNode) text = text.replace(/ $/, '');
+      if (!text.trim()) { node.textContent = text; return; }
+      const sr = document.createElement('span');
+      sr.className = 'sr';
+      sr.textContent = text;
+      const vis = document.createElement('span');
+      vis.setAttribute('aria-hidden', 'true');
+      text.split(/( )/).forEach(part => {
+        if (!part) return;
+        if (part === ' ') { vis.appendChild(document.createTextNode(' ')); return; }
+        const w = document.createElement('span');
+        w.className = 'w';
+        for (const ch of part) {
+          const s = document.createElement('span');
+          s.className = 'ch';
+          s.textContent = ch;
+          w.appendChild(s);
+        }
+        vis.appendChild(w);
+      });
+      node.replaceWith(sr, vis);
+    });
+  }
+
+  function measureLetters() {
+    letters = [];
+    document.querySelectorAll('.ch').forEach(el => {
+      const r = el.getBoundingClientRect();
+      letters.push({ el, cx: r.left + r.width / 2 + window.scrollX, cy: r.top + r.height / 2 + window.scrollY, busy: false });
+    });
+  }
+
+  function nudge(x, y) {
+    const X = x + window.scrollX, Y = y + window.scrollY;
+    for (const L of letters) {
+      const dx = L.cx - X, dy = L.cy - Y;
+      if (L.busy || dx > NUDGE_R || dx < -NUDGE_R || dy > NUDGE_R || dy < -NUDGE_R) continue;
+      const dist = Math.hypot(dx, dy);
+      if (dist > NUDGE_R) continue;
+      const f = 1 - dist / NUDGE_R;
+      const ux = dist ? dx / dist : (Math.random() < 0.5 ? -1 : 1);
+      L.busy = true;
+      const anim = L.el.animate([
+        { transform: 'translate(0, 0) rotate(0deg)' },
+        {
+          transform: `translate(${(ux * NUDGE_X * f).toFixed(2)}px, ${(-NUDGE_Y * f * rand(0.6, 1)).toFixed(2)}px) rotate(${(ux * NUDGE_ROT * f).toFixed(2)}deg)`,
+          offset: 0.25
+        },
+        { transform: 'translate(0, 0) rotate(0deg)' }
+      ], { duration: 700 + rand(0, 250), easing: 'cubic-bezier(.3,.7,.3,1)' });
+      anim.onfinish = anim.oncancel = () => { L.busy = false; };
+    }
+  }
+
+  /* ---------- umbrella ---------- */
+
+  function renderUmbrella() {
+    umbrellaEl.style.transform = `translate(${U.x.toFixed(1)}px, ${U.y.toFixed(1)}px) rotate(${U.tilt.toFixed(2)}deg)`;
+  }
+  // Its spot: just right of the name (on a narrow phone it may overlap the last letter a little).
+  function homeSpot() {
+    let r = nameEl.getBoundingClientRect();
+    const node = [...nameEl.childNodes].find(n => n.nodeType === 3);
+    if (node) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      r = range.getBoundingClientRect();
+    }
+    const s = U.s, pageW = document.documentElement.clientWidth;
+    // canopy sits a little above the top of the capitals
+    const x = Math.min(r.right + 24 * s, pageW - 160 * s - 4);
+    const y = r.top - r.height * 0.05 - 8 * s;
+    return { x: x + window.scrollX, y: y + window.scrollY };
+  }
+  function goHome(animate) {
+    const h = homeSpot();
+    U.x = h.x;
+    U.y = h.y;
+    U.home = true;
+    if (animate) {
+      umbrellaEl.classList.add('returning');
+      setTimeout(() => umbrellaEl.classList.remove('returning'), 750);
+    }
+    renderUmbrella();
+  }
+  function follow() {
+    const pageW = document.documentElement.clientWidth;
+    U.x = clamp(U.cx + window.scrollX - U.grabX, -100 * U.s, pageW - 60 * U.s);
+    U.y = U.cy + window.scrollY - U.grabY;
+  }
+
+  umbrellaEl.addEventListener('pointerdown', e => {
+    if (e.button && e.button !== 0) return;
+    e.preventDefault();
+    try { umbrellaEl.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    umbrellaEl.classList.remove('returning');
+    umbrellaEl.classList.add('dragging');
+    U.dragging = true;
+    U.moved = false;
+    U.grabX = e.clientX + window.scrollX - U.x;
+    U.grabY = e.clientY + window.scrollY - U.y;
+    U.startX = U.cx = e.clientX;
+    U.startY = U.cy = e.clientY;
+  });
+  umbrellaEl.addEventListener('pointermove', e => {
+    if (!U.dragging) return;
+    if (!U.moved) {
+      if (Math.hypot(e.clientX - U.startX, e.clientY - U.startY) < 4) return;
+      U.moved = true;
+      U.home = false;
+    }
+    U.vx = e.clientX - U.cx;
+    U.cx = e.clientX;
+    U.cy = e.clientY;
+    follow();
+  });
+  window.addEventListener('scroll', () => { if (U.dragging && U.moved) follow(); }, { passive: true });
+  function endDrag() {
+    if (!U.dragging) return;
+    U.dragging = false;
+    umbrellaEl.classList.remove('dragging');
+  }
+  umbrellaEl.addEventListener('pointerup', endDrag);
+  umbrellaEl.addEventListener('pointercancel', endDrag);
+  umbrellaEl.addEventListener('dblclick', () => { if (!U.home) goHome(true); });
+  umbrellaEl.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (!U.home) goHome(true);
+  });
+
+  // No rain, no umbrella: it folds and fades away, then comes back open beside the name when the rain does.
+  let hideTimer = 0;
+  function setUmbrellaHidden(hide) {
+    if (hide === umbrellaEl.classList.contains('is-hidden')) return;
+    clearTimeout(hideTimer);
+    if (hide) {
+      U.dragging = false;
+      U.open = false;
+      umbrellaEl.classList.remove('is-open', 'dragging');
+      umbrellaEl.classList.add('is-hidden');
+      hideTimer = setTimeout(() => { U.tilt = HOME_TILT; goHome(); }, 650);
+    } else {
+      if (!U.home) { U.tilt = HOME_TILT; goHome(); }
+      U.open = true;
+      umbrellaEl.classList.add('is-open');
+      umbrellaEl.classList.remove('is-hidden');
+    }
+    umbrellaEl.tabIndex = hide ? -1 : 0;
+    umbrellaEl.setAttribute('aria-hidden', String(hide));
+  }
+
+  function stepUmbrella(dt) {
+    const target = U.dragging && U.moved ? clamp(U.vx * 1.2, -10, 10) : (U.home ? HOME_TILT : 0);
+    U.tilt += (target - U.tilt) * Math.min(1, dt * 8);
+    U.vx *= Math.max(0, 1 - dt * 10);
+    renderUmbrella();
+  }
+
+  /* ---------- rain control and the sun ---------- */
+
+  let sunTimer = 0;
+  const describe = v => v === 0 ? 'Sunny' : v < 20 ? 'Drizzle' : v < 55 ? 'Rain' : v < 85 ? 'Heavy rain' : 'Downpour';
+  function setAmount(v, first) {
+    const prev = amount;
+    amount = v;
+    slider.value = String(v);
+    slider.setAttribute('aria-valuetext', describe(v));
+    slider.title = describe(v);
+    try { localStorage.setItem('rain-amount', String(v)); } catch (e) { /* storage unavailable */ }
+    document.body.classList.toggle('is-clear', v === 0);
+    setUmbrellaHidden(v === 0);
+    // turning the rain off: a brief shaft of sunlight sweeps across
+    if (!first && v === 0 && prev !== 0 && !reduce) {
+      document.body.classList.remove('sun-flash');
+      void document.body.offsetWidth;
+      document.body.classList.add('sun-flash');
+      clearTimeout(sunTimer);
+      sunTimer = setTimeout(() => document.body.classList.remove('sun-flash'), 2600);
+    }
+  }
+  slider.addEventListener('input', () => setAmount(Number(slider.value)));
+  setAmount(amount, true);
+
+  // Clicking anywhere (not a link, button or the umbrella) drops a raindrop there.
+  document.addEventListener('pointerdown', e => {
+    if (reduce || e.target.closest('a, button, input, .weather, .umbrella')) return;
+    spawnRipple(e.clientX, e.clientY, depthAt(e.clientY));
+    nudge(e.clientX, e.clientY);
+  });
+
+  let resizeTimer = 0;
+  window.addEventListener('resize', () => {
+    resize();
+    if (reduce) { staticFrame(); return; }
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { measureLetters(); if (U.home && !U.dragging) goHome(); }, 250);
+  });
+
+  /* ---------- start ---------- */
+
+  function staticFrame() {
+    ripples = [];
+    if (amount > 0) {
+      for (let i = 0; i < 30; i++) {
+        const d = Math.random();
+        spawnRipple(rand(0, W), landingY(d), d);
+        const r = ripples[ripples.length - 1];
+        r.t = r.dur * rand(0.15, 0.7);
+      }
+    }
+    draw();
+  }
+
+  resize();
+
+  if (reduce) {
+    weather.hidden = true;
+    umbrellaEl.hidden = true;
+    staticFrame();
+    return;
+  }
+
+  document.querySelectorAll('.nudge').forEach(splitText);
+  // re-measure once the web fonts have arrived and the text has reflowed
+  const relayout = () => { measureLetters(); if (U.home && !U.dragging) goHome(); };
+  relayout();
+  if (document.fonts) {
+    document.fonts.ready.then(relayout).catch(() => {});
+    document.fonts.addEventListener('loadingdone', relayout);
+  }
+  window.addEventListener('load', relayout);
+
+  // the umbrella gives a little wiggle once, so people notice it
+  setTimeout(() => {
+    if (!U.home || umbrellaEl.classList.contains('is-hidden')) return;
+    umbrellaEl.classList.add('hint');
+    setTimeout(() => umbrellaEl.classList.remove('hint'), 1200);
+  }, 2500);
+
+  // warm start so the first frame already has rain in it
+  const n = Math.round(rainParams().rate * W * 1.2);
+  for (let i = 0; i < n; i++) {
+    spawnDrop();
+    drops[drops.length - 1].y = rand(0, H * 0.7);
+  }
+  for (let i = 0; i < n * 2; i++) {
+    const d = Math.random();
+    spawnRipple(rand(0, W), landingY(d), d);
+    const r = ripples[ripples.length - 1];
+    r.t = r.dur * Math.random();
+  }
+
+  let last = 0;
+  const frame = t => {
+    const dt = Math.min((t - last) / 1000, 0.05);
+    last = t;
+    step(dt);
+    stepUmbrella(dt);
+    draw();
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(t => { last = t; frame(t); });
+})();
+</script>
+</body>
+</html>

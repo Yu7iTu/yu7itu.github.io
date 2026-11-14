@@ -153,8 +153,8 @@
   }
   .body p { margin: 0 0 14px; max-width: 62ch; }
   .body p:last-child { margin-bottom: 0; }
-  .about-body { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 28px; align-items: start; }
-  .portrait { margin: 5px 0 0; width: 100%; }
+  .about-side { display: flex; flex-direction: column; gap: 18px; }
+  .portrait { margin: 0; width: 150px; max-width: 100%; }
   .portrait img, .portrait-empty {
     display: block;
     width: 100%;
@@ -335,7 +335,6 @@
     body { font-size: 16px; }
     main { padding-top: 64px; }
     section { grid-template-columns: 1fr; gap: 12px; }
-    .about-body { grid-template-columns: 1fr; gap: 18px; }
     .portrait { width: 130px; }
     #rain-amount { width: 120px; }
     .umbrella { width: 112px; height: 140px; transform-origin: 56px 115.5px; }
@@ -377,16 +376,16 @@
   </header>
 
   <section>
-    <h2 class="nudge">About</h2>
-    <div class="body about-body">
+    <div class="about-side">
+      <h2 class="nudge">About</h2>
       <figure class="portrait">
         <img src="images/portrait.jpg" alt="Yuqi Tu by the water on a sunny day" width="720" height="1080">
       </figure>
-      <div class="about-text">
-        <!-- EDIT: about text -->
-        <p class="nudge">I am a PhD student in the <a href="https://www.bu.edu/cds-faculty/">Faculty of Computing &amp; Data Sciences (CDS)</a> at Boston University, advised by Xuezhou Zhang. I work on reinforcement learning and natural language processing.</p>
-        <p class="nudge">I received my bachelor's degree in Mathematics (Honors) and Computer Sciences from UW–Madison, where I was mentored by Prof. <a href="https://people.math.wisc.edu/~valko/">Benedek Valko</a>, Prof. <a href="http://www.iliasdiakonikolas.org">Ilias Diakonikolas</a> and Prof. <a href="https://jcape1.github.io/">Joshua Cape</a>. Before Madison, I studied for two years at Shanghai University of Finance and Economics.</p>
-      </div>
+    </div>
+    <div class="body">
+      <!-- EDIT: about text -->
+      <p class="nudge">I am a PhD student in the <a href="https://www.bu.edu/cds-faculty/">Faculty of Computing &amp; Data Sciences (CDS)</a> at Boston University, advised by Xuezhou Zhang. I work on reinforcement learning and natural language processing.</p>
+      <p class="nudge">I received my bachelor's degree in Mathematics (Honors) and Computer Sciences from UW–Madison, where I was mentored by Prof. <a href="https://people.math.wisc.edu/~valko/">Benedek Valko</a>, Prof. <a href="http://www.iliasdiakonikolas.org">Ilias Diakonikolas</a> and Prof. <a href="https://jcape1.github.io/">Joshua Cape</a>. Before Madison, I studied for two years at Shanghai University of Finance and Economics.</p>
     </div>
   </section>
 

@@ -185,6 +185,20 @@
   }
   .interests p { margin: 0; color: var(--ink-soft); max-width: 56ch; }
 
+  .pubs { list-style: none; margin: 0; padding: 0; display: grid; gap: 26px; }
+  .pub-title {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  .pubs p { margin: 0; }
+  .pub-authors strong { font-weight: 500; color: #12365a; }
+  .pubs .pub-venue { margin-top: 2px; font-size: 15px; color: var(--ink-soft); }
+  .pubs .pub-note { margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
+
   .links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 28px; }
   a {
     color: var(--ink);
@@ -384,7 +398,7 @@
     </div>
     <div class="body">
       <!-- EDIT: about text -->
-      <p class="nudge">I am a PhD student in the <a href="https://www.bu.edu/cds-faculty/">Faculty of Computing &amp; Data Sciences (CDS)</a> at Boston University, advised by Xuezhou Zhang. I work on reinforcement learning and natural language processing.</p>
+      <p class="nudge">I am a PhD student in the <a href="https://www.bu.edu/cds-faculty/">Faculty of Computing &amp; Data Sciences (CDS)</a> at Boston University, advised by <a href="https://zhangxz1123.github.io/index.html">Xuezhou Zhang</a>. I work on reinforcement learning and natural language processing.</p>
       <p class="nudge">I received my bachelor's degree in Mathematics (Honors) and Computer Sciences from UW–Madison, where I was mentored by Prof. <a href="https://people.math.wisc.edu/~valko/">Benedek Valko</a>, Prof. <a href="http://www.iliasdiakonikolas.org">Ilias Diakonikolas</a> and Prof. <a href="https://jcape1.github.io/">Joshua Cape</a>. Before Madison, I studied for two years at Shanghai University of Finance and Economics.</p>
     </div>
   </section>
@@ -403,6 +417,19 @@
       <li>
         <h3 class="nudge">Language models</h3>
         <p class="nudge">Decision-making and reasoning in NLP systems.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="nudge">Publications</h2>
+    <!-- EDIT: add new papers as more <li> blocks, newest first -->
+    <ul class="pubs">
+      <li>
+        <h3 class="pub-title nudge">From Ranking to Selection: Evaluating Representation Proxies in RL</h3>
+        <p class="pub-authors nudge">Matthew Shumway*, <strong>Yuqi Tu*</strong>, <a href="https://zhangxz1123.github.io/index.html">Xuezhou Zhang</a></p>
+        <p class="pub-venue nudge">In submission, 2026</p>
+        <p class="pub-note nudge">*Equal contribution, listed alphabetically</p>
       </li>
     </ul>
   </section>

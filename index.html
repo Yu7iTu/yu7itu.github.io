@@ -1062,11 +1062,13 @@
     S.pad = { g, oscs };
   }
 
-  // the whisper of rain follows the slider; the notes follow the drops
+  // the whisper of rain follows the slider; the notes follow the drops.
+  // When the rain stops, the chord and the hiss fade out too: clear weather is silent.
   function updateBed() {
     if (!S.ctx) return;
-    const t = amount / 100;
-    S.hiss.gain.setTargetAtTime(amount > 0 ? 0.012 + 0.05 * t : 0, S.ctx.currentTime, 0.6);
+    const t = amount / 100, now = S.ctx.currentTime, raining = amount > 0;
+    S.hiss.gain.setTargetAtTime(raining ? 0.012 + 0.05 * t : 0, now, 0.6);
+    S.padBus.gain.setTargetAtTime(raining ? 1 : 0, now, 0.8);
   }
   function setSound(on) {
     if (on && !S.ctx && !startAudio()) return;

@@ -131,7 +131,7 @@
 
   section {
     display: grid;
-    grid-template-columns: 170px 1fr;
+    grid-template-columns: 210px 1fr;
     gap: 16px 40px;
     padding: 36px 0;
     border-top: 1px solid var(--line);
@@ -146,8 +146,7 @@
   }
   .body p { margin: 0 0 14px; max-width: 62ch; }
   .body p:last-child { margin-bottom: 0; }
-  .about-side { display: flex; flex-direction: column; gap: 18px; }
-  .portrait { margin: 0; width: 150px; max-width: 100%; }
+  .portrait { margin: 5px 0 0; width: 100%; }
   .portrait img, .portrait-empty {
     display: block;
     width: 100%;
@@ -332,7 +331,7 @@
     body { font-size: 16px; }
     main { padding-top: 64px; }
     section { grid-template-columns: 1fr; gap: 12px; }
-    .portrait { width: 130px; }
+    .portrait { width: 170px; margin: 0; }
     #rain-amount { width: 120px; }
     .umbrella { width: 112px; height: 140px; transform-origin: 56px 115.5px; }
   }
@@ -370,13 +369,10 @@
     <h1>Yuqi Tu</h1>
   </header>
 
-  <section>
-    <div class="about-side">
-      <h2 class="nudge">About</h2>
-      <figure class="portrait">
-        <img src="images/portrait.jpg" alt="Yuqi Tu by the water on a sunny day" width="720" height="1080">
-      </figure>
-    </div>
+  <section aria-label="About">
+    <figure class="portrait">
+      <img src="images/portrait.jpg" alt="Yuqi Tu by the water on a sunny day" width="720" height="1080">
+    </figure>
     <div class="body">
       <!-- EDIT: about text -->
       <p class="nudge">I am a PhD student in the <a href="https://www.bu.edu/cds-faculty/">Faculty of Computing &amp; Data Sciences (CDS)</a> at Boston University, advised by <a href="https://zhangxz1123.github.io/index.html">Xuezhou Zhang</a> and <a href="https://nsaphra.net">Naomi Saphra</a>. I work on reinforcement learning and large language models.</p>

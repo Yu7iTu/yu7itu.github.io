@@ -10,18 +10,69 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Instrument+Sans:wght@400;500&family=Noto+Serif+SC:wght@300;400&display=swap" rel="stylesheet">
 <style>
-  /* Direction: rain on baby blue water. Left-aligned editorial column, one large italic name, hairline rules instead of cards. */
+  /* Direction: rain on baby blue water by day, a rainy night in deep blue after dark.
+     Left-aligned editorial column, one large italic name, hairline rules instead of cards. */
   :root {
-    --sky-top: #cdeafb;
-    --sky-mid: #ade0f6;
-    --sky-low: #92cbef;
+    /* sky while it rains */
+    --sky-top: #e8f6fe;
+    --sky-mid: #d4eefb;
+    --sky-low: #bfe4f7;
+    --sky-glow: rgba(255, 255, 255, 0);
+    /* sky when the rain is turned off */
+    --clear-top: #fdfeff;
+    --clear-mid: #f2f9fe;
+    --clear-low: #e3f2fc;
+    --clear-glow: rgba(255, 243, 214, 0.55);
+    --beam-rgb: 255, 248, 225;
+    --stars: 0;
+    /* text */
     --ink: #163a5e;
+    --ink-strong: #12365a;
     --ink-soft: #4c7298;
     --line: rgba(22, 58, 94, 0.2);
     --accent: #2f6fa8;
+    /* controls and umbrella */
+    --panel-bg: rgba(255, 255, 255, 0.72);
+    --panel-edge: rgba(255, 255, 255, 0.9);
+    --panel-shadow: rgba(30, 90, 150, 0.45);
+    --track: linear-gradient(90deg, #fff1cf 0%, #c6e8fb 30%, #2f6fa8 100%);
+    --thumb: #ffffff;
+    --fabric: rgba(170, 214, 244, 0.92);
+    --fabric-open: rgba(232, 246, 255, 0.5);
+    --fabric-edge: rgba(255, 255, 255, 0.95);
+    --ribs: rgba(47, 111, 168, 0.45);
+    --shaft: #12365a;
     --font-display: "Cormorant Garamond", "Noto Serif SC", Georgia, serif;
     --font-body: "Instrument Sans", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
     color-scheme: light;
+  }
+  :root[data-mode="night"] {
+    --sky-top: #0a1629;
+    --sky-mid: #10233f;
+    --sky-low: #183559;
+    --sky-glow: rgba(120, 165, 230, 0.16);
+    --clear-top: #0d1d38;
+    --clear-mid: #142b4f;
+    --clear-low: #1d3d68;
+    --clear-glow: rgba(215, 230, 255, 0.26);
+    --beam-rgb: 205, 225, 255;
+    --stars: 1;
+    --ink: #d9e7f7;
+    --ink-strong: #eef5ff;
+    --ink-soft: #8fa9cc;
+    --line: rgba(190, 215, 245, 0.18);
+    --accent: #8cc8f2;
+    --panel-bg: rgba(14, 30, 56, 0.78);
+    --panel-edge: rgba(150, 190, 235, 0.22);
+    --panel-shadow: rgba(0, 0, 0, 0.55);
+    --track: linear-gradient(90deg, #dfe9ff 0%, #6d9ccf 40%, #8cc8f2 100%);
+    --thumb: #0f2240;
+    --fabric: rgba(110, 150, 200, 0.7);
+    --fabric-open: rgba(190, 215, 250, 0.16);
+    --fabric-edge: rgba(215, 232, 255, 0.75);
+    --ribs: rgba(170, 205, 240, 0.45);
+    --shaft: #cfe0f5;
+    color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
@@ -41,7 +92,9 @@
     position: fixed;
     inset: 0;
     z-index: 0;
-    background: radial-gradient(120vmax 90vmax at 50% -20%, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-low) 100%);
+    background:
+      radial-gradient(55vmax 40vmax at 85% -5%, var(--sky-glow), transparent 70%),
+      radial-gradient(120vmax 90vmax at 50% -20%, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-low) 100%);
   }
   .sky-clear {
     position: absolute;
@@ -49,8 +102,28 @@
     opacity: 0;
     transition: opacity 2.4s ease;
     background:
-      radial-gradient(60vmax 45vmax at 10% -10%, rgba(255, 243, 214, 0.55), transparent 65%),
-      radial-gradient(120vmax 90vmax at 50% -20%, #eef9ff 0%, #c8eafc 45%, #a8daf6 100%);
+      radial-gradient(60vmax 45vmax at 10% -10%, var(--clear-glow), transparent 65%),
+      radial-gradient(120vmax 90vmax at 50% -20%, var(--clear-top) 0%, var(--clear-mid) 45%, var(--clear-low) 100%);
+  }
+  /* a few stars come out on a clear night */
+  .sky-clear::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: var(--stars);
+    background:
+      radial-gradient(1.4px 1.4px at 14% 22%, rgba(255, 255, 255, 0.9), transparent),
+      radial-gradient(1px 1px at 27% 9%, rgba(255, 255, 255, 0.8), transparent),
+      radial-gradient(1.2px 1.2px at 41% 31%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1.6px 1.6px at 58% 14%, rgba(255, 255, 255, 0.9), transparent),
+      radial-gradient(1px 1px at 66% 38%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1.3px 1.3px at 74% 7%, rgba(255, 255, 255, 0.85), transparent),
+      radial-gradient(1px 1px at 83% 26%, rgba(255, 255, 255, 0.7), transparent),
+      radial-gradient(1.5px 1.5px at 91% 16%, rgba(255, 255, 255, 0.9), transparent),
+      radial-gradient(1px 1px at 8% 44%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1.2px 1.2px at 35% 52%, rgba(255, 255, 255, 0.5), transparent),
+      radial-gradient(1px 1px at 52% 61%, rgba(255, 255, 255, 0.45), transparent),
+      radial-gradient(1.3px 1.3px at 88% 49%, rgba(255, 255, 255, 0.55), transparent);
   }
   body.is-clear .sky-clear { opacity: 1; }
 
@@ -75,11 +148,11 @@
     opacity: 0;
     transform-origin: 50% 0;
     background: linear-gradient(90deg,
-      rgba(255, 248, 225, 0) 0%,
-      rgba(255, 248, 225, 0.7) 42%,
-      rgba(255, 252, 240, 0.95) 50%,
-      rgba(255, 248, 225, 0.7) 58%,
-      rgba(255, 248, 225, 0) 100%);
+      rgba(var(--beam-rgb), 0) 0%,
+      rgba(var(--beam-rgb), 0.7) 42%,
+      rgba(var(--beam-rgb), 0.95) 50%,
+      rgba(var(--beam-rgb), 0.7) 58%,
+      rgba(var(--beam-rgb), 0) 100%);
     filter: blur(14px);
     mix-blend-mode: screen;
   }
@@ -92,7 +165,7 @@
     height: 60vmax;
     border-radius: 50%;
     opacity: 0;
-    background: radial-gradient(circle, rgba(255, 246, 220, 0.9), rgba(255, 246, 220, 0) 65%);
+    background: radial-gradient(circle, rgba(var(--beam-rgb), 0.9), rgba(var(--beam-rgb), 0) 65%);
   }
   body.sun-flash .beam { animation: beam 2.2s cubic-bezier(.3, .6, .3, 1) forwards; }
   body.sun-flash .beam.thin { animation-delay: 0.15s; }
@@ -125,7 +198,7 @@
     font-size: clamp(72px, 15vw, 168px);
     line-height: 0.92;
     letter-spacing: -0.02em;
-    color: #12365a;
+    color: var(--ink-strong);
     text-wrap: balance;
   }
 
@@ -174,11 +247,11 @@
     font-weight: 500;
     font-size: 17px;
     line-height: 1.5;
-    color: #12365a;
+    color: var(--ink-strong);
     text-wrap: balance;
   }
   .pubs p { margin: 0; }
-  .pub-authors strong { font-weight: 500; color: #12365a; }
+  .pub-authors strong { font-weight: 500; color: var(--ink-strong); }
   .pubs .pub-venue { margin-top: 2px; font-size: 15px; color: var(--ink-soft); }
   .pubs .pub-note { margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
 
@@ -256,17 +329,17 @@
   }
   .is-open .u-canopy { transform: scale(1, 1); }
   .u-fabric {
-    fill: rgba(170, 214, 244, 0.92);
-    stroke: rgba(255, 255, 255, 0.95);
+    fill: var(--fabric);
+    stroke: var(--fabric-edge);
     stroke-width: 2;
     stroke-linejoin: round;
     pointer-events: visiblePainted;
     cursor: grab;
     transition: fill 0.5s;
   }
-  .is-open .u-fabric { fill: rgba(232, 246, 255, 0.5); }
-  .u-ribs { fill: none; stroke: rgba(47, 111, 168, 0.45); stroke-width: 1.2; }
-  .u-shaft { fill: none; stroke: #12365a; stroke-width: 3.2; stroke-linecap: round; }
+  .is-open .u-fabric { fill: var(--fabric-open); }
+  .u-ribs { fill: none; stroke: var(--ribs); stroke-width: 1.2; }
+  .u-shaft { fill: none; stroke: var(--shaft); stroke-width: 3.2; stroke-linecap: round; }
   .umbrella.dragging .u-hit, .umbrella.dragging .u-fabric { cursor: grabbing; }
 
   /* rain intensity control */
@@ -280,12 +353,29 @@
     gap: 2px;
     padding: 4px;
     font-size: 13px;
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-edge);
     border-radius: 999px;
-    box-shadow: 0 8px 24px -12px rgba(30, 90, 150, 0.45);
+    box-shadow: 0 8px 24px -12px var(--panel-shadow);
   }
-  .weather { gap: 10px; padding: 7px 14px; }
+  .weather { gap: 10px; padding: 7px 10px 7px 14px; }
+  .weather .sep { width: 1px; height: 16px; background: var(--line); }
+  #mode-toggle {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+  }
+  #mode-toggle:hover { color: var(--accent); background: var(--line); }
+  #mode-toggle .icon-sun, :root[data-mode="night"] #mode-toggle .icon-moon { display: none; }
+  :root[data-mode="night"] #mode-toggle .icon-sun { display: block; }
   .weather svg { flex: none; color: var(--ink-soft); }
   #rain-amount {
     -webkit-appearance: none;
@@ -299,12 +389,12 @@
   #rain-amount::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 999px;
-    background: linear-gradient(90deg, #fff1cf 0%, #c6e8fb 30%, var(--accent) 100%);
+    background: var(--track);
   }
   #rain-amount::-moz-range-track {
     height: 4px;
     border-radius: 999px;
-    background: linear-gradient(90deg, #fff1cf 0%, #c6e8fb 30%, var(--accent) 100%);
+    background: var(--track);
   }
   #rain-amount::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -312,7 +402,7 @@
     height: 16px;
     margin-top: -6px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--thumb);
     border: 1.5px solid var(--accent);
     box-shadow: 0 2px 6px rgba(30, 90, 150, 0.35);
   }
@@ -320,7 +410,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--thumb);
     border: 1.5px solid var(--accent);
     box-shadow: 0 2px 6px rgba(30, 90, 150, 0.35);
   }
@@ -335,6 +425,15 @@
     .umbrella { width: 112px; height: 140px; transform-origin: 56px 115.5px; }
   }
 </style>
+<script>
+  // Night mode: your last choice, otherwise whatever the device is set to.
+  (() => {
+    let mode = null;
+    try { mode = localStorage.getItem('mode'); } catch (e) { /* storage unavailable */ }
+    if (mode !== 'night' && mode !== 'day') mode = matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'day';
+    document.documentElement.dataset.mode = mode;
+  })();
+</script>
 </head>
 <body>
 <div class="sky" aria-hidden="true"><div class="sky-clear"></div></div>
@@ -349,6 +448,11 @@
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
   <input type="range" id="rain-amount" min="0" max="100" step="1" value="40" aria-label="Rain intensity">
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.5 1.2 3.4 3.4 0 0 1 .1 6.8z"/><path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5"/></svg>
+  <span class="sep" aria-hidden="true"></span>
+  <button type="button" id="mode-toggle" aria-pressed="false" aria-label="Night mode" title="Night mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.5 14.6A7.6 7.6 0 0 1 9.4 4.5a7.6 7.6 0 1 0 10.1 10.1z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+  </button>
 </div>
 
 <div class="umbrella is-open" id="umbrella" tabindex="0" role="button" title="Drag me" aria-label="Umbrella. Drag it to keep the rain off another part of the page. Double-click or press Enter to put it back beside the name.">
@@ -447,11 +551,17 @@
   const rand = (a, b) => a + Math.random() * (b - a);
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-  // Each drop gets its own shade somewhere between white and BLUE.
-  const BLUE = [46, 120, 189]; // deepest shade (edit to change the blue end)
+  // Each drop gets its own shade between white and a blue. By day the palest drops start a little blue
+  // so they still show on the light sky; at night the drops run from white to a soft light blue.
+  const RAIN = {
+    day:   { blue: [46, 120, 189], min: 0.2 },
+    night: { blue: [125, 175, 225], min: 0 }
+  };
+  const root = document.documentElement;
   function tint() {
-    const c = Math.random();
-    const mix = i => Math.round(255 + (BLUE[i] - 255) * c);
+    const R = RAIN[root.dataset.mode === 'night' ? 'night' : 'day'];
+    const c = R.min + (1 - R.min) * Math.random();
+    const mix = i => Math.round(255 + (R.blue[i] - 255) * c);
     return { c, rgb: `${mix(0)},${mix(1)},${mix(2)}` };
   }
 
@@ -800,6 +910,27 @@
     }
   }
   slider.addEventListener('input', () => setAmount(Number(slider.value)));
+
+  const modeToggle = document.getElementById('mode-toggle');
+  function showMode() {
+    const night = root.dataset.mode === 'night';
+    modeToggle.setAttribute('aria-pressed', String(night));
+    modeToggle.title = night ? 'Day mode' : 'Night mode';
+  }
+  modeToggle.addEventListener('click', () => {
+    root.dataset.mode = root.dataset.mode === 'night' ? 'day' : 'night';
+    try { localStorage.setItem('mode', root.dataset.mode); } catch (e) { /* storage unavailable */ }
+    showMode();
+  });
+  // follow the device's setting until someone picks a mode here
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    let saved = null;
+    try { saved = localStorage.getItem('mode'); } catch (err) { /* storage unavailable */ }
+    if (saved) return;
+    root.dataset.mode = e.matches ? 'night' : 'day';
+    showMode();
+  });
+  showMode();
   setAmount(amount, true);
 
   // Clicking anywhere (not a link, button or the umbrella) drops a raindrop there.

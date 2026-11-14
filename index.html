@@ -452,7 +452,7 @@
   <input type="range" id="rain-amount" min="0" max="100" step="1" value="40" aria-label="Rain intensity">
   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.5 1.2 3.4 3.4 0 0 1 .1 6.8z"/><path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5"/></svg>
   <span class="sep" aria-hidden="true"></span>
-  <button type="button" id="sound-toggle" aria-pressed="false" aria-label="Rain sound" title="Rain sound">
+  <button type="button" id="sound-toggle" aria-pressed="false" aria-label="Rain music" title="Rain music">
     <svg class="icon-off" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5"/></svg>
     <svg class="icon-on" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.2L11.5 6v12l-4.3-3.5H4z"/><path d="M15 9.2a4 4 0 0 1 0 5.6M17.6 6.8a7.4 7.4 0 0 1 0 10.4"/></svg>
   </button>
@@ -623,7 +623,7 @@
   }
 
   function hitUmbrella(p, h) {
-    tap(p.x);
+    note(p.x, 0, true);
     // a couple of tiny droplets bounce off the canopy
     const len = Math.hypot(h.nx, h.ny) || 1;
     for (let k = 0; k < 2; k++) {
@@ -647,7 +647,8 @@
   }
 
   function step(dt) {
-    S.tokens = Math.min(3, S.tokens + dt * 8); // at most ~8 umbrella taps a second
+    // a few notes a second at most: about 0.5 in light rain up to 3 in a downpour
+    S.tokens = Math.min(2, S.tokens + dt * (amount > 0 ? 0.5 + 2.5 * amount / 100 : 0));
     const rate = rainParams().rate;
     if (rate > 0) {
       acc += dt * rate * W;
@@ -662,6 +663,7 @@
       if (p.y >= p.ty) {
         spawnRipple(p.x, p.ty, p.d, p.tint);
         nudge(p.x, p.ty);
+        note(p.x, p.d);
         drops.splice(i, 1);
       }
     }
@@ -898,13 +900,46 @@
     renderUmbrella();
   }
 
-  /* ---------- rain sound: made in the browser, off until a visitor turns it on ---------- */
-  // Three layers of noise, no tones: a soft pink-noise hiss, a patter made of thousands of tiny
-  // random clicks (the sound of many drops), and a low wash. A tap plays when rain hits the umbrella.
+  /* ---------- rain music: made in the browser, off until a visitor turns it on ---------- */
+  // Raindrops play the music. A drop that lands can ring a soft, bell-like note from a pentatonic
+  // scale (major by day, minor at night): far drops ring high, near drops low, each panned to where
+  // it fell. Underneath, a slow quiet chord and a whisper of rain, all in a gentle reverb.
 
   const soundBtn = document.getElementById('sound-toggle');
-  const S = { on: false, ctx: null, master: null, hiss: null, patter: null, patterSrc: null, low: null, tick: null, tokens: 0 };
+  const S = { on: false, ctx: null, master: null, dry: null, wet: null, hiss: null, padBus: null, pad: null, padStep: 0, padTimer: 0, offTimer: 0, tokens: 0, lastNote: -1 };
 
+  const midi = m => 440 * Math.pow(2, (m - 69) / 12);
+  const SCALES = {
+    day:   [62, 64, 66, 69, 71, 74, 76, 78, 81, 83, 86], // D major pentatonic, D4 to D6
+    night: [57, 60, 62, 64, 67, 69, 72, 74, 76, 79, 81]  // A minor pentatonic, A3 to A5
+  };
+  const CHORDS = {
+    day:   [[50, 57, 64, 66], [47, 54, 62, 69]], // Dadd9, then Bm7
+    night: [[45, 52, 60, 67], [41, 48, 57, 64]]  // Am7, then Fmaj7
+  };
+  const modeKey = () => (root.dataset.mode === 'night' ? 'night' : 'day');
+
+  function filter(ctx, type, freq, q) {
+    const f = ctx.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    if (q) f.Q.value = q;
+    return f;
+  }
+  // a soft hall: decaying noise, darkened a little
+  function reverbIR(ctx, seconds) {
+    const len = Math.floor(ctx.sampleRate * seconds);
+    const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      let y = 0;
+      for (let i = 0; i < len; i++) {
+        y += 0.35 * ((Math.random() * 2 - 1) - y);
+        d[i] = y * Math.pow(1 - i / len, 3.2);
+      }
+    }
+    return ir;
+  }
   function pinkNoise(ctx, seconds) {
     const len = Math.floor(ctx.sampleRate * seconds);
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -923,83 +958,134 @@
     }
     return buf;
   }
-  function brownNoise(ctx, seconds) {
-    const len = Math.floor(ctx.sampleRate * seconds);
-    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    let last = 0;
-    for (let i = 0; i < len; i++) {
-      last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
-      d[i] = last * 3.5;
-    }
-    return buf;
-  }
-  // many tiny decaying clicks at random times: mostly faint, a few closer and louder
-  function patterNoise(ctx, seconds, perSecond) {
-    const sr = ctx.sampleRate, len = Math.floor(sr * seconds);
-    const buf = ctx.createBuffer(1, len, sr);
-    const d = buf.getChannelData(0);
-    const n = Math.floor(perSecond * seconds);
-    for (let j = 0; j < n; j++) {
-      const at = Math.floor(Math.random() * len);
-      const amp = Math.pow(Math.random(), 2.4) * 0.9;
-      const dur = Math.floor(sr * rand(0.0015, 0.006));
-      for (let k = 0; k < dur; k++) {
-        d[(at + k) % len] += (Math.random() * 2 - 1) * amp * Math.exp(-k / (dur / 4));
-      }
-    }
-    return buf;
-  }
-  function loop(ctx, buffer, ...chain) {
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    src.loop = true;
-    let node = src;
-    for (const next of chain) node = node.connect(next);
-    src.start();
-    return src;
-  }
-  function filter(ctx, type, freq, q) {
-    const f = ctx.createBiquadFilter();
-    f.type = type;
-    f.frequency.value = freq;
-    if (q) f.Q.value = q;
-    return f;
-  }
+
   function startAudio() {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
     const ctx = new AC();
     const master = ctx.createGain();
     master.gain.value = 0;
-    master.connect(ctx.destination);
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -20;
+    comp.ratio.value = 3;
+    comp.connect(master).connect(ctx.destination);
+    const dry = ctx.createGain(); dry.gain.value = 0.7; dry.connect(comp);
+    const reverb = ctx.createConvolver(); reverb.buffer = reverbIR(ctx, 3.4);
+    const wet = ctx.createGain(); wet.gain.value = 0.6; wet.connect(reverb).connect(comp);
+    // the pad goes through a warm low-pass into both
+    const padBus = ctx.createGain(); padBus.gain.value = 1;
+    const padTone = filter(ctx, 'lowpass', 900);
+    padBus.connect(padTone);
+    padTone.connect(dry);
+    padTone.connect(wet);
+    // a whisper of rain underneath
     const hiss = ctx.createGain(); hiss.gain.value = 0;
-    const patter = ctx.createGain(); patter.gain.value = 0;
-    const low = ctx.createGain(); low.gain.value = 0;
-    loop(ctx, pinkNoise(ctx, 4), filter(ctx, 'highpass', 300), filter(ctx, 'lowpass', 4500), hiss, master);
-    const patterSrc = loop(ctx, patterNoise(ctx, 6, 380), filter(ctx, 'bandpass', 2600, 0.6), filter(ctx, 'lowpass', 7000), patter, master);
-    loop(ctx, brownNoise(ctx, 5), filter(ctx, 'lowpass', 400), low, master);
-    Object.assign(S, { ctx, master, hiss, patter, patterSrc, low });
+    const src = ctx.createBufferSource();
+    src.buffer = pinkNoise(ctx, 4);
+    src.loop = true;
+    src.connect(filter(ctx, 'highpass', 250)).connect(filter(ctx, 'lowpass', 2200)).connect(hiss).connect(comp);
+    src.start();
+    Object.assign(S, { ctx, master, dry, wet, hiss, padBus });
     return true;
   }
-  // everything follows the rain slider, and goes quiet when the rain stops
+
+  // one bell-like note: a sine with two faint overtones that fade faster than the fundamental
+  function bell(freq, vel, x) {
+    const ctx = S.ctx, now = ctx.currentTime + 0.01;
+    const tone = filter(ctx, 'lowpass', 3200);
+    let out = tone;
+    if (ctx.createStereoPanner) {
+      const pan = ctx.createStereoPanner();
+      pan.pan.value = clamp((x / W) * 2 - 1, -1, 1) * 0.75;
+      tone.connect(pan);
+      out = pan;
+    }
+    out.connect(S.dry);
+    out.connect(S.wet);
+    [[1, 1, 2.8], [2, 0.16, 1.1], [3, 0.05, 0.5]].forEach(([mult, level, decay]) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq * mult;
+      osc.detune.value = rand(-3, 3);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(vel * level, now + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+      osc.connect(g).connect(tone);
+      osc.start(now);
+      osc.stop(now + decay + 0.05);
+    });
+  }
+  function note(x, d, high, forced) {
+    if (!S.on || !S.ctx) return;
+    if (!forced) {
+      if (S.tokens < 1) return;
+      S.tokens -= 1;
+    }
+    const scale = SCALES[modeKey()];
+    const top = scale.length - 1;
+    let i = high ? top - Math.floor(Math.random() * 3) : Math.round((1 - d) * top + rand(-2, 2));
+    i = clamp(i, 0, top);
+    if (i === S.lastNote) i = clamp(i + (Math.random() < 0.5 ? -1 : 1), 0, top);
+    S.lastNote = i;
+    const vel = (high ? 0.035 : 0.045 + 0.055 * d) * (forced ? 1.4 : 1);
+    bell(midi(scale[i]), vel, x);
+  }
+
+  // the slow chord underneath: every 11 seconds it eases into the next one
+  function padChord() {
+    if (!S.ctx) return;
+    const ctx = S.ctx, now = ctx.currentTime;
+    const chord = CHORDS[modeKey()][S.padStep++ % 2];
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(1, now + 4);
+    g.connect(S.padBus);
+    const oscs = chord.map(m => {
+      const o = ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = midi(m);
+      o.detune.value = rand(-6, 6);
+      const og = ctx.createGain();
+      og.gain.value = 0.016;
+      o.connect(og).connect(g);
+      o.start(now);
+      return o;
+    });
+    if (S.pad) {
+      const old = S.pad;
+      old.g.gain.cancelScheduledValues(now);
+      old.g.gain.setValueAtTime(old.g.gain.value, now);
+      old.g.gain.linearRampToValueAtTime(0, now + 4);
+      old.oscs.forEach(o => o.stop(now + 4.2));
+    }
+    S.pad = { g, oscs };
+  }
+
+  // the whisper of rain follows the slider; the notes follow the drops
   function updateBed() {
     if (!S.ctx) return;
-    const t = amount / 100, now = S.ctx.currentTime, raining = amount > 0;
-    S.hiss.gain.setTargetAtTime(raining ? 0.05 + 0.2 * Math.pow(t, 1.2) : 0, now, 0.5);
-    S.patter.gain.setTargetAtTime(raining ? 0.12 + 0.5 * t : 0, now, 0.5);
-    S.low.gain.setTargetAtTime(raining ? 0.03 + 0.15 * t : 0, now, 0.7);
-    S.patterSrc.playbackRate.setTargetAtTime(0.8 + 0.5 * t, now, 0.5); // heavier rain, denser patter
+    const t = amount / 100;
+    S.hiss.gain.setTargetAtTime(amount > 0 ? 0.012 + 0.05 * t : 0, S.ctx.currentTime, 0.6);
   }
   function setSound(on) {
     if (on && !S.ctx && !startAudio()) return;
     S.on = on;
     soundBtn.setAttribute('aria-pressed', String(on));
-    soundBtn.title = on ? 'Mute rain' : 'Rain sound';
+    soundBtn.title = on ? 'Mute music' : 'Rain music';
     if (!S.ctx) return;
-    if (on) S.ctx.resume();
-    updateBed();
-    S.master.gain.setTargetAtTime(on ? 0.8 : 0, S.ctx.currentTime, 0.3);
+    clearTimeout(S.offTimer);
+    clearInterval(S.padTimer);
+    if (on) {
+      S.ctx.resume();
+      updateBed();
+      padChord();
+      S.padTimer = setInterval(padChord, 11000);
+      S.master.gain.setTargetAtTime(0.75, S.ctx.currentTime, 0.5);
+    } else {
+      S.master.gain.setTargetAtTime(0, S.ctx.currentTime, 0.3);
+      S.offTimer = setTimeout(() => { if (!S.on) S.ctx.suspend(); }, 1500);
+    }
   }
   soundBtn.addEventListener('click', () => setSound(!S.on));
   document.addEventListener('visibilitychange', () => {
@@ -1007,27 +1093,6 @@
     if (document.hidden) S.ctx.suspend();
     else if (S.on) S.ctx.resume();
   });
-
-  // a soft tap when a drop hits the umbrella, panned to where it hit
-  function tap(x) {
-    if (!S.on || !S.ctx || S.tokens < 1) return;
-    S.tokens -= 1;
-    const ctx = S.ctx, now = ctx.currentTime;
-    const out = ctx.createGain();
-    if (ctx.createStereoPanner) {
-      const pan = ctx.createStereoPanner();
-      pan.pan.value = clamp((x / W) * 2 - 1, -1, 1) * 0.7;
-      out.connect(pan).connect(S.master);
-    } else out.connect(S.master);
-    out.gain.setValueAtTime(0, now);
-    out.gain.linearRampToValueAtTime(0.04, now + 0.003);
-    out.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-    const src = ctx.createBufferSource();
-    src.buffer = S.tick || (S.tick = pinkNoise(ctx, 0.08));
-    src.connect(filter(ctx, 'bandpass', rand(1100, 1800), 0.9)).connect(out);
-    src.start(now);
-    src.stop(now + 0.08);
-  }
 
   /* ---------- rain control and the sun ---------- */
 
@@ -1067,6 +1132,7 @@
     root.dataset.mode = root.dataset.mode === 'night' ? 'day' : 'night';
     try { localStorage.setItem('mode', root.dataset.mode); } catch (e) { /* storage unavailable */ }
     showMode();
+    if (S.on) padChord();
   });
   // follow the device's setting until someone picks a mode here
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
@@ -1083,6 +1149,7 @@
   document.addEventListener('pointerdown', e => {
     if (reduce || e.target.closest('a, button, input, .weather, .umbrella')) return;
     spawnRipple(e.clientX, e.clientY, depthAt(e.clientY));
+    note(e.clientX, depthAt(e.clientY), false, true);
     nudge(e.clientX, e.clientY);
   });
 
